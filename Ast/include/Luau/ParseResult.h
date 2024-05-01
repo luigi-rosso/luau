@@ -64,6 +64,7 @@ struct ParseResult
     std::vector<ParseError> errors;
 
     std::vector<Comment> commentLocations;
+    std::vector<Lexeme> lexemes;
 };
 
 static constexpr const char* kParseNameError = "%error-id%";
