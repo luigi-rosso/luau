@@ -472,6 +472,7 @@ private:
 
     std::vector<Comment> commentLocations;
     std::vector<HotComment> hotcomments;
+    std::vector<Luau::Lexeme> lexemes;
 
     bool hotcommentHeader = true;
 
