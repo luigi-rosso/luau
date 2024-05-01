@@ -1921,6 +1921,7 @@ SourceModule Frontend::parse(const ModuleName& name, std::string_view src, const
     {
         sourceModule.commentLocations = std::move(parseResult.commentLocations);
         sourceModule.hotcomments = std::move(parseResult.hotcomments);
+        sourceModule.lexemes = std::move(parseResult.lexemes);
     }
 
     return sourceModule;
