@@ -69,6 +69,8 @@ struct ParseResult
     std::vector<Comment> commentLocations;
 
     CstNodeMap cstNodeMap{nullptr};
+
+    std::vector<Lexeme> lexemes;
 };
 
 struct ParseExprResult
