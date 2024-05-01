@@ -236,7 +236,7 @@ ParseResult Parser::parse(const char* buffer, size_t bufferSize, AstNameTable& n
         AstStatBlock* root = p.parseChunk();
         size_t lines = p.lexer.current().location.end.line + (bufferSize > 0 && buffer[bufferSize - 1] != '\n');
 
-        return ParseResult{root, lines, std::move(p.hotcomments), std::move(p.parseErrors), std::move(p.commentLocations), std::move(p.cstNodeMap)};
+        return ParseResult{root, lines, std::move(p.hotcomments), std::move(p.parseErrors), std::move(p.commentLocations), std::move(p.cstNodeMap), std::move(p.lexemes)};
     }
     catch (ParseError& err)
     {
@@ -5381,6 +5381,7 @@ void Parser::nextLexeme()
 {
     Lexeme::Type type = lexer.next(/* skipComments= */ false, true).type;
 
+    lexemes.push_back(lexer.current());
     while (type == Lexeme::BrokenComment || type == Lexeme::Comment || type == Lexeme::BlockComment)
     {
         const Lexeme& lexeme = lexer.current();
@@ -5406,6 +5407,7 @@ void Parser::nextLexeme()
         }
 
         type = lexer.next(/* skipComments= */ false, /* updatePrevLocation= */ false).type;
+        lexemes.push_back(lexer.current());
     }
 }
 
