@@ -55,6 +55,7 @@ struct SourceModule
 
     std::vector<HotComment> hotcomments;
     std::vector<Comment> commentLocations;
+    std::vector<Luau::Lexeme> lexemes;
 
     SourceModule()
         : allocator(new Allocator)
