@@ -739,6 +739,16 @@ void lua_pushvector(lua_State* L, LUA_VECTOR_TYPE x, LUA_VECTOR_TYPE y, LUA_VECT
     api_incr_top(L);
 }
 #endif
+void lua_pushvector2(lua_State* L, float x, float y)
+{
+    TValue* i_o = L->top;
+    float* i_v = i_o->value.v;
+    i_v[0] = x;
+    i_v[1] = y;
+    i_o->tt = LUA_TVECTOR;
+
+    api_incr_top(L);
+}
 
 void lua_pushlstring(lua_State* L, const char* s, size_t len)
 {
