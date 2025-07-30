@@ -237,7 +237,6 @@ struct Frontend
     std::optional<CheckResult> getCheckResult(const ModuleName& name, bool accumulateNested, bool forAutocomplete = false);
     std::vector<ModuleName> getRequiredScripts(const ModuleName& name);
 
-private:
     ModulePtr check(
         const SourceModule& sourceModule,
         Mode mode,
@@ -248,7 +247,8 @@ private:
         Frontend::Stats& stats,
         TypeCheckLimits typeCheckLimits
     );
-
+    
+private:
     std::pair<SourceNode*, SourceModule*> getSourceNode(const ModuleName& name);
     SourceModule parse(const ModuleName& name, std::string_view src, const ParseOptions& parseOptions);
 
