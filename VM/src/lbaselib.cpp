@@ -10,7 +10,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#ifndef RIVE_LUAU
 static void writestring(const char* s, size_t l)
 {
     fwrite(s, 1, l, stdout);
@@ -31,7 +31,7 @@ static int luaB_print(lua_State* L)
     writestring("\n", 1);
     return 0;
 }
-
+#endif
 static int luaB_tonumber(lua_State* L)
 {
     int base = luaL_optinteger(L, 2, 10);
@@ -400,7 +400,7 @@ static int luaB_tostring(lua_State* L)
     luaL_tolstring(L, 1, NULL);
     return 1;
 }
-
+#ifndef RIVE_LUAU
 static int luaB_newproxy(lua_State* L)
 {
     int t = lua_type(L, 1);
@@ -418,7 +418,7 @@ static int luaB_newproxy(lua_State* L)
 
     return 1;
 }
-
+#endif
 static const luaL_Reg base_funcs[] = {
     {"assert", luaB_assert},
     {"error", luaB_error},
@@ -426,8 +426,10 @@ static const luaL_Reg base_funcs[] = {
     {"getfenv", luaB_getfenv},
     {"getmetatable", luaB_getmetatable},
     {"next", luaB_next},
+#ifndef RIVE_LUAU
     {"newproxy", luaB_newproxy},
     {"print", luaB_print},
+#endif
     {"rawequal", luaB_rawequal},
     {"rawget", luaB_rawget},
     {"rawset", luaB_rawset},
