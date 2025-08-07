@@ -512,11 +512,11 @@ void registerBuiltinGlobals(Frontend& frontend, GlobalTypes& globals, bool typeC
             attachMagicFunction(*ttv->props["clone"].readTy, std::make_shared<MagicClone>());
         attachMagicFunction(*ttv->props["freeze"].readTy, std::make_shared<MagicFreeze>());
     }
-
+#ifndef RIVE_LUAU
     TypeId requireTy = getGlobalBinding(globals, "require");
     attachTag(requireTy, kRequireTagName);
     attachMagicFunction(requireTy, std::make_shared<MagicRequire>());
-
+#endif
     // Global scope cannot be the parent of the type checking environment because it can be changed by the embedder
     globals.globalTypeFunctionScope->exportedTypeBindings = globals.globalScope->exportedTypeBindings;
     globals.globalTypeFunctionScope->builtinTypeNames = globals.globalScope->builtinTypeNames;
@@ -781,15 +781,15 @@ bool MagicFormat::typeCheck(const MagicFunctionTypeCheckContext& context)
             {
                 switch (shouldSuppressErrors(NotNull{&context.typechecker->normalizer}, actualTy))
                 {
-                    case ErrorSuppression::Suppress:
-                        break;
-                    case ErrorSuppression::NormalizationFailed:
-                        break;
-                    case ErrorSuppression::DoNotSuppress:
-                        Reasonings reasonings = context.typechecker->explainReasonings(actualTy, expectedTy, location, result);
+                case ErrorSuppression::Suppress:
+                    break;
+                case ErrorSuppression::NormalizationFailed:
+                    break;
+                case ErrorSuppression::DoNotSuppress:
+                    Reasonings reasonings = context.typechecker->explainReasonings(actualTy, expectedTy, location, result);
 
-                        if (!reasonings.suppressed)
-                            context.typechecker->reportError(TypeMismatch{expectedTy, actualTy, reasonings.toString()}, location);
+                    if (!reasonings.suppressed)
+                        context.typechecker->reportError(TypeMismatch{expectedTy, actualTy, reasonings.toString()}, location);
                 }
             }
         }
