@@ -1731,6 +1731,9 @@ ControlFlow TypeChecker::check(const ScopePtr& scope, const AstStatDeclareExtern
     TypeId externTy = binding->type;
     ExternType* etv = getMutable<ExternType>(externTy);
 
+    if (!etv)
+        ice("Couldn't resolve mutable extern type");
+
     if (!etv->metatable)
         ice("No metatable for declared extern type");
 
