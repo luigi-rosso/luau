@@ -1221,6 +1221,25 @@ static void populateRTTI(lua_State* L, Luau::TypeId type)
     }
 }
 
+static void buildinBadExtern(Luau::Frontend& frontend, Luau::GlobalTypes& globals, bool typeCheckForAutocomplete)
+{
+    LUAU_ASSERT(!globals.globalTypes.types.isFrozen());
+    LUAU_ASSERT(!globals.globalTypes.typePacks.isFrozen());
+
+    static const std::string definition = R"BUILTIN_SRC(
+    declare extern type Character with
+      character: Character
+    end
+    export type Character =
+        'character02'
+        | 'character01';
+    )BUILTIN_SRC";
+
+    Luau::LoadDefinitionFileResult loadResult =
+        frontend.loadDefinitionFile(globals, globals.globalScope, definition, "@luau", /* captureComments */ false, typeCheckForAutocomplete);
+    LUAU_ASSERT(loadResult.success);
+}
+
 TEST_CASE("Types")
 {
     runConformance(
@@ -1231,6 +1250,7 @@ TEST_CASE("Types")
             Luau::NullFileResolver fileResolver;
             Luau::NullConfigResolver configResolver;
             Luau::Frontend frontend{&fileResolver, &configResolver};
+            buildinBadExtern(frontend, frontend.globals, false);
             Luau::registerBuiltinGlobals(frontend, frontend.globals);
             Luau::freeze(frontend.globals.globalTypes);
 
