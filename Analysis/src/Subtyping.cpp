@@ -760,7 +760,7 @@ struct SeenTypePackSetPopper
 
     SeenTypePackSetPopper(Subtyping::SeenTypePackSet* seenTypes, std::pair<TypePackId, TypePackId> pair)
         : seenTypes(seenTypes)
-          , pair(std::move(pair))
+        , pair(std::move(pair))
     {
         LUAU_ASSERT(FFlag::LuauReturnMappedGenericPacksFromSubtyping2);
     }
@@ -1176,10 +1176,9 @@ SubtypingResult Subtyping::isCovariantWith(SubtypingEnvironment& env, TypePackId
                         if (FFlag::LuauReturnMappedGenericPacksFromSubtyping2)
                         {
                             const TypePack* tp = get<TypePack>(*other);
-                            if (const VariadicTypePack* vtp = tp
-                                                                  ? get<VariadicTypePack>(
-                                                                      FFlag::LuauMissingFollowMappedGenericPacks ? follow(tp->tail) : tp->tail)
-                                                                  : nullptr; vtp && vtp->hidden)
+                            if (const VariadicTypePack* vtp =
+                                    tp ? get<VariadicTypePack>(FFlag::LuauMissingFollowMappedGenericPacks ? follow(tp->tail) : tp->tail) : nullptr;
+                                vtp && vtp->hidden)
                             {
                                 TypePackId taillessTp = arena->addTypePack(tp->head);
                                 results.push_back(isCovariantWith(env, taillessTp, superTailPack, scope)
@@ -1270,10 +1269,9 @@ SubtypingResult Subtyping::isCovariantWith(SubtypingEnvironment& env, TypePackId
                         if (FFlag::LuauReturnMappedGenericPacksFromSubtyping2)
                         {
                             const TypePack* tp = get<TypePack>(*other);
-                            if (const VariadicTypePack* vtp = tp
-                                                                  ? get<VariadicTypePack>(
-                                                                      FFlag::LuauMissingFollowMappedGenericPacks ? follow(tp->tail) : tp->tail)
-                                                                  : nullptr; vtp && vtp->hidden)
+                            if (const VariadicTypePack* vtp =
+                                    tp ? get<VariadicTypePack>(FFlag::LuauMissingFollowMappedGenericPacks ? follow(tp->tail) : tp->tail) : nullptr;
+                                vtp && vtp->hidden)
                             {
                                 TypePackId taillessTp = arena->addTypePack(tp->head);
                                 results.push_back(isCovariantWith(env, subTailPack, taillessTp, scope)
@@ -1862,8 +1860,8 @@ SubtypingResult Subtyping::isCovariantWith(SubtypingEnvironment& env, const Tabl
                 if (superProp.isShared())
                 {
                     results.push_back(isInvariantWith(env, subTable->indexer->indexResultType, *superProp.readTy, scope)
-                                      .withSubComponent(TypePath::TypeField::IndexResult)
-                                      .withSuperComponent(TypePath::Property::read(name)));
+                                          .withSubComponent(TypePath::TypeField::IndexResult)
+                                          .withSuperComponent(TypePath::Property::read(name)));
                 }
                 else
                 {
@@ -2073,8 +2071,9 @@ SubtypingResult Subtyping::isCovariantWith(SubtypingEnvironment& env, const Prim
                     LUAU_ASSERT(*it->second.readTy);
 
                     if (auto stringTable = get<TableType>(*it->second.readTy))
-                        result.orElse(isCovariantWith(env, stringTable, superTable, scope)
-                                      .withSubPath(TypePath::PathBuilder().mt().readProp("__index").build()));
+                        result.orElse(
+                            isCovariantWith(env, stringTable, superTable, scope).withSubPath(TypePath::PathBuilder().mt().readProp("__index").build())
+                        );
                 }
             }
         }
@@ -2108,8 +2107,9 @@ SubtypingResult Subtyping::isCovariantWith(
                     LUAU_ASSERT(*it->second.readTy);
 
                     if (auto stringTable = get<TableType>(*it->second.readTy))
-                        result.orElse(isCovariantWith(env, stringTable, superTable, scope)
-                                            .withSubPath(TypePath::PathBuilder().mt().readProp("__index").build()));
+                        result.orElse(
+                            isCovariantWith(env, stringTable, superTable, scope).withSubPath(TypePath::PathBuilder().mt().readProp("__index").build())
+                        );
                 }
             }
         }
@@ -2142,7 +2142,46 @@ SubtypingResult Subtyping::isCovariantWith(
     SubtypingResult res{true};
 
     if (superProp.isShared() && subProp.isShared())
-        res.andAlso(isInvariantWith(env, *subProp.readTy, *superProp.readTy, scope).withBothComponent(TypePath::Property::read(name)));
+    {
+        // Check if this is an optional function compatibility case
+        bool isOptionalFunctionCase = false;
+        if (const UnionType* superUnion = get<UnionType>(follow(*superProp.readTy)))
+        {
+            // Only handle the specific case: function <: function?
+            // This must be exactly a union of nil and a function type
+            if (superUnion->options.size() == 2)
+            {
+                bool hasNil = false;
+                bool hasFunction = false;
+                bool hasOther = false;
+                for (TypeId option : superUnion)
+                {
+                    if (isNil(option))
+                        hasNil = true;
+                    else if (get<FunctionType>(follow(option)))
+                        hasFunction = true;
+                    else
+                        hasOther = true;
+                }
+                // Only treat as optional function if it's exactly nil | function (no other types)
+                if (hasNil && hasFunction && !hasOther && get<FunctionType>(follow(*subProp.readTy)))
+                {
+                    isOptionalFunctionCase = true;
+                }
+            }
+        }
+
+        if (isOptionalFunctionCase)
+        {
+            // For optional function cases, use covariant subtyping
+            res.andAlso(isCovariantWith(env, *subProp.readTy, *superProp.readTy, scope).withBothComponent(TypePath::Property::read(name)));
+        }
+        else
+        {
+            // For other shared properties, use invariant subtyping
+            res.andAlso(isInvariantWith(env, *subProp.readTy, *superProp.readTy, scope).withBothComponent(TypePath::Property::read(name)));
+        }
+    }
     else
     {
         if (superProp.readTy.has_value() && subProp.readTy.has_value())
@@ -2503,11 +2542,13 @@ std::pair<TypeId, ErrorVec> Subtyping::handleTypeFunctionReductionResult(const T
     return {builtinTypes->neverType, errors};
 }
 
-SubtypingResult Subtyping::trySemanticSubtyping(SubtypingEnvironment& env,
-                                                TypeId subTy,
-                                                TypeId superTy,
-                                                NotNull<Scope> scope,
-                                                SubtypingResult& original)
+SubtypingResult Subtyping::trySemanticSubtyping(
+    SubtypingEnvironment& env,
+    TypeId subTy,
+    TypeId superTy,
+    NotNull<Scope> scope,
+    SubtypingResult& original
+)
 {
     SubtypingResult semantic = isCovariantWith(env, normalizer->normalize(subTy), normalizer->normalize(superTy), scope);
 
