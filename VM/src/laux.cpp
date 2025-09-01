@@ -82,6 +82,20 @@ static l_noret tag_error(lua_State* L, int narg, int tag)
     luaL_typeerrorL(L, narg, lua_typename(L, tag));
 }
 
+#ifdef RIVE_LUAU
+void luaL_where(lua_State* L, int level)
+{
+    lua_Debug ar;
+    if (lua_getinfo(L, level, "sl", &ar) && ar.currentline > 0)
+    {
+        lua_pushfstring(L, "%s:%d: ", ar.source, ar.currentline);
+        return;
+    }
+
+    lua_rawcheckstack(L, 1);
+    lua_pushliteral(L, ":: "); // else, no information available...
+}
+#else
 // Can be called without stack space reservation
 void luaL_where(lua_State* L, int level)
 {
@@ -95,6 +109,7 @@ void luaL_where(lua_State* L, int level)
     lua_rawcheckstack(L, 1);
     lua_pushliteral(L, ""); // else, no information available...
 }
+#endif
 
 // Can be called without stack space reservation
 l_noret luaL_errorL(lua_State* L, const char* fmt, ...)
