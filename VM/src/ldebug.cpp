@@ -347,6 +347,8 @@ l_noret luaG_readonlyerror(lua_State* L)
 static void pusherror(lua_State* L, const char* msg)
 {
     CallInfo* ci = L->ci;
+// Rive always uses the debug structure to get line info.
+#ifndef RIVE_LUAU
     if (isLua(ci))
     {
         TString* source = getluaproto(ci)->source;
@@ -356,6 +358,7 @@ static void pusherror(lua_State* L, const char* msg)
         luaO_pushfstring(L, "%s:%d: %s", chunkid, line, msg);
     }
     else
+#endif
     {
         lua_pushstring(L, msg);
     }
