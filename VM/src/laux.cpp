@@ -76,7 +76,11 @@ void luaL_where(lua_State* L, int level)
         lua_pushfstring(L, "%s:%d: ", ar.source, ar.currentline);
         return;
     }
-
+    if (lua_getinfo(L, 0, "sl", &ar) && ar.currentline > 0)
+    {
+        lua_pushfstring(L, "%s:%d: ", ar.source, ar.currentline);
+        return;
+    }
     lua_rawcheckstack(L, 1);
     lua_pushliteral(L, ":: "); // else, no information available...
 }
