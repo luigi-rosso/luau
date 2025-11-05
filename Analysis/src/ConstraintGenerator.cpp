@@ -897,7 +897,10 @@ void ConstraintGenerator::prototypeTypeDefinitions(const ScopePtr& scope, AstSta
                 if (scope->exportedTypeBindings.count(alias->name.value) != 0 || scope->privateTypeBindings.count(alias->name.value) != 0)
                 {
                     auto it = DEPRECATED_aliasDefinitionLocations.find(alias->name.value);
-                    LUAU_ASSERT(it != DEPRECATED_aliasDefinitionLocations.end());
+                    if (it == DEPRECATED_aliasDefinitionLocations.end())
+                    {
+                        continue;
+                    }
                     reportError(alias->location, DuplicateTypeDefinition{alias->name.value, it->second});
                     continue;
                 }
