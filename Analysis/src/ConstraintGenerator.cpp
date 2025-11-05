@@ -756,7 +756,10 @@ void ConstraintGenerator::checkAliases(const ScopePtr& scope, AstStatBlock* bloc
             if (scope->exportedTypeBindings.count(alias->name.value) || scope->privateTypeBindings.count(alias->name.value))
             {
                 auto it = aliasDefinitionLocations.find(alias->name.value);
-                LUAU_ASSERT(it != aliasDefinitionLocations.end());
+                if (it == aliasDefinitionLocations.end())
+                {
+                    continue;
+                }
                 reportError(alias->location, DuplicateTypeDefinition{alias->name.value, it->second});
                 continue;
             }
