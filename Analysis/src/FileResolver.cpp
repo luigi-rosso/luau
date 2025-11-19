@@ -83,6 +83,7 @@ static RequireSuggestions makeSuggestionsFromNode(std::unique_ptr<RequireNode> n
 
     const size_t lastSlashInPath = path.find_last_of('/');
 
+#ifndef RIVE_LUAU
     if (lastSlashInPath != std::string_view::npos)
     {
         // Add a suggestion for the parent directory
@@ -101,6 +102,7 @@ static RequireSuggestions makeSuggestionsFromNode(std::unique_ptr<RequireNode> n
 
         result.push_back(std::move(parentSuggestion));
     }
+#endif
 
     std::string fullPathPrefix;
     if (isPartialPath)
@@ -136,8 +138,14 @@ static RequireSuggestions makeSuggestionsFromNode(std::unique_ptr<RequireNode> n
             continue;
 
         RequireSuggestion suggestion;
+#ifdef RIVE_LUAU
+        // RIVE: Use absolute paths directly, no "/" prefix or relative path building
+        suggestion.label = child->getLabel();
+        suggestion.fullPath = child->getLabel();
+#else
         suggestion.label = isPartialPath || path.back() == '/' ? child->getLabel() : "/" + child->getLabel();
         suggestion.fullPath = fullPathPrefix + std::move(pathComponent);
+#endif
         suggestion.tags = child->getTags();
         result.push_back(std::move(suggestion));
     }
@@ -145,10 +153,8 @@ static RequireSuggestions makeSuggestionsFromNode(std::unique_ptr<RequireNode> n
     return result;
 }
 
-std::optional<RequireSuggestions> RequireSuggester::getRequireSuggestionsImpl(
-    const ModuleName& requirer,
-    const std::optional<std::string>& path
-) const
+std::optional<RequireSuggestions> RequireSuggester::getRequireSuggestionsImpl(const ModuleName& requirer, const std::optional<std::string>& path)
+    const
 {
     if (!path)
         return std::nullopt;
