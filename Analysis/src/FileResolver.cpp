@@ -42,8 +42,36 @@ static RequireSuggestions makeSuggestionsFromAliases(std::vector<RequireAlias> a
 static RequireSuggestions makeSuggestionsForFirstComponent(std::unique_ptr<RequireNode> node)
 {
     RequireSuggestions result = makeSuggestionsFromAliases(node->getAvailableAliases());
+#ifndef RIVE_LUAU
     result.push_back(RequireSuggestion{"./", "./", {}});
     result.push_back(RequireSuggestion{"../", "../", {}});
+#endif
+
+#ifdef RIVE_LUAU
+    // RIVE: Add all children as absolute path suggestions
+    // This allows typing "m" to show modules starting with "m" without needing ./
+    for (const std::unique_ptr<RequireNode>& child : node->getChildren())
+    {
+        if (!child)
+            continue;
+
+        std::string pathComponent = child->getPathComponent();
+
+        // If path component contains a slash, it cannot be required by string.
+        if (pathComponent.find('/') != std::string::npos)
+            continue;
+
+        // Use the full module name from getLabel() as the absolute path
+        std::string fullModuleName = child->getLabel();
+
+        RequireSuggestion suggestion;
+        suggestion.label = fullModuleName;
+        suggestion.fullPath = fullModuleName;
+        suggestion.tags = child->getTags();
+        result.push_back(std::move(suggestion));
+    }
+#endif
+
     return result;
 }
 
