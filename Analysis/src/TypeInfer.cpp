@@ -1772,12 +1772,25 @@ ControlFlow TypeChecker::check(const ScopePtr& scope, const AstStatDeclareExtern
 
         if (assignTo.count(propName) == 0)
         {
-            assignTo[propName] = {propTy, /*deprecated*/ false, /*deprecatedSuggestion*/ "", prop.location};
+            if (prop.access == AstTableAccess::Read)
+            {
+                assignTo[propName] = Property::readonly(propTy);
+                assignTo[propName].location = prop.location;
+            }
+            else if (prop.access == AstTableAccess::Write)
+            {
+                assignTo[propName] = Property::writeonly(propTy);
+                assignTo[propName].location = prop.location;
+            }
+            else
+            {
+                assignTo[propName] = {propTy, /*deprecated*/ false, /*deprecatedSuggestion*/ "", prop.location};
+            }
         }
         else
         {
-            Luau::Property& prop = assignTo[propName];
-            TypeId currentTy = prop.type_DEPRECATED();
+            Luau::Property& existingProp = assignTo[propName];
+            TypeId currentTy = existingProp.type_DEPRECATED();
 
             // We special-case this logic to keep the intersection flat; otherwise we
             // would create a ton of nested intersection types.
@@ -1787,15 +1800,41 @@ ControlFlow TypeChecker::check(const ScopePtr& scope, const AstStatDeclareExtern
                 options.push_back(propTy);
                 TypeId newItv = addType(IntersectionType{std::move(options)});
 
-                prop.readTy = newItv;
-                prop.writeTy = newItv;
+                if (prop.access == AstTableAccess::Read)
+                {
+                    existingProp.readTy = newItv;
+                    existingProp.writeTy = std::nullopt;
+                }
+                else if (prop.access == AstTableAccess::Write)
+                {
+                    existingProp.readTy = std::nullopt;
+                    existingProp.writeTy = newItv;
+                }
+                else
+                {
+                    existingProp.readTy = newItv;
+                    existingProp.writeTy = newItv;
+                }
             }
             else if (get<FunctionType>(currentTy))
             {
                 TypeId intersection = addType(IntersectionType{{currentTy, propTy}});
 
-                prop.readTy = intersection;
-                prop.writeTy = intersection;
+                if (prop.access == AstTableAccess::Read)
+                {
+                    existingProp.readTy = intersection;
+                    existingProp.writeTy = std::nullopt;
+                }
+                else if (prop.access == AstTableAccess::Write)
+                {
+                    existingProp.readTy = std::nullopt;
+                    existingProp.writeTy = intersection;
+                }
+                else
+                {
+                    existingProp.readTy = intersection;
+                    existingProp.writeTy = intersection;
+                }
             }
             else
             {

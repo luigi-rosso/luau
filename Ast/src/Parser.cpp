@@ -1272,7 +1272,7 @@ AstDeclaredExternTypeProperty Parser::parseDeclaredExternTypeMethod(const AstArr
         Location(start, end), attributes, generics, genericPacks, AstTypeList{copy(vars), varargAnnotation}, copy(varNames), retTypes
     );
 
-    return AstDeclaredExternTypeProperty{fnName.name, fnName.location, fnType, true, Location(start, end)};
+    return AstDeclaredExternTypeProperty{fnName.name, fnName.location, fnType, true, Location(start, end), AstTableAccess::ReadWrite, std::nullopt};
 }
 
 AstStat* Parser::parseDeclaration(const Location& start, const AstArray<AstAttr*>& attributes)
@@ -1405,6 +1405,26 @@ AstStat* Parser::parseDeclaration(const Location& start, const AstArray<AstAttr*
                     );
             }
 
+            // Check for read/write access modifier
+            AstTableAccess access = AstTableAccess::ReadWrite;
+            std::optional<Location> accessLocation;
+
+            if (lexer.current().type == Lexeme::Name && lexer.lookahead().type != ':')
+            {
+                if (AstName(lexer.current().name) == "read")
+                {
+                    accessLocation = lexer.current().location;
+                    access = AstTableAccess::Read;
+                    nextLexeme();
+                }
+                else if (AstName(lexer.current().name) == "write")
+                {
+                    accessLocation = lexer.current().location;
+                    access = AstTableAccess::Write;
+                    nextLexeme();
+                }
+            }
+
             // There are two possibilities: Either it's a property or a function.
             if (lexer.current().type == Lexeme::ReservedFunction)
             {
@@ -1433,7 +1453,7 @@ AstStat* Parser::parseDeclaration(const Location& start, const AstArray<AstAttr*
                     {
                         props.push_back(
                             AstDeclaredExternTypeProperty{
-                                AstName(chars->data), Location(nameBegin, nameEnd), type, false, Location(begin.location, lexer.previousLocation())
+                                AstName(chars->data), Location(nameBegin, nameEnd), type, false, Location(begin.location, lexer.previousLocation()), access, accessLocation
                             }
                         );
                     }
@@ -1453,7 +1473,7 @@ AstStat* Parser::parseDeclaration(const Location& start, const AstArray<AstAttr*
                 }
                 else
                 {
-                    indexer = parseTableIndexer(AstTableAccess::ReadWrite, std::nullopt, begin).node;
+                    indexer = parseTableIndexer(access, accessLocation, begin).node;
                 }
             }
             else
@@ -1467,7 +1487,7 @@ AstStat* Parser::parseDeclaration(const Location& start, const AstArray<AstAttr*
                 expectAndConsume(':', "property type annotation");
                 AstType* propType = parseType();
                 props.push_back(
-                    AstDeclaredExternTypeProperty{propName->name, propName->location, propType, false, Location(propStart, lexer.previousLocation())}
+                    AstDeclaredExternTypeProperty{propName->name, propName->location, propType, false, Location(propStart, lexer.previousLocation()), access, accessLocation}
                 );
             }
         }
