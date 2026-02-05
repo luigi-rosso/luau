@@ -1792,6 +1792,155 @@ static int luauF_isfinite(lua_State* L, StkId res, TValue* arg0, int nresults, S
     return -1;
 }
 
+// Rive 2D-optimized fast functions (skip z component since Rive vectors are 2D with z=0)
+
+static int luauF_vectordistance(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        float dx = a[0] - b[0];
+        float dy = a[1] - b[1];
+        setnvalue(res, sqrtf(dx * dx + dy * dy));
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vectordistancesquared(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        float dx = a[0] - b[0];
+        float dy = a[1] - b[1];
+        setnvalue(res, dx * dx + dy * dy);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vectororigin(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nresults <= 1)
+    {
+        setvvalue(res, 0.0f, 0.0f, 0.0f, 0.0f);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vectorlengthsquared(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 1 && nresults <= 1 && ttisvector(arg0))
+    {
+        const float* v = vvalue(arg0);
+        setnvalue(res, v[0] * v[0] + v[1] * v[1]);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2dot(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        setnvalue(res, a[0] * b[0] + a[1] * b[1]);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2magnitude(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 1 && nresults <= 1 && ttisvector(arg0))
+    {
+        const float* v = vvalue(arg0);
+        setnvalue(res, sqrtf(v[0] * v[0] + v[1] * v[1]));
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2normalize(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 1 && nresults <= 1 && ttisvector(arg0))
+    {
+        const float* v = vvalue(arg0);
+        float lenSq = v[0] * v[0] + v[1] * v[1];
+        float invLen = 1.0f / sqrtf(lenSq);
+        setvvalue(res, v[0] * invLen, v[1] * invLen, 0.0f, 0.0f);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2lerp(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 3 && nresults <= 1 && ttisvector(arg0) && ttisvector(args) && ttisnumber(args + 1))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        const float t = static_cast<float>(nvalue(args + 1));
+        setvvalue(res, luai_lerpf(a[0], b[0], t), luai_lerpf(a[1], b[1], t), 0.0f, 0.0f);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2cross(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        setnvalue(res, a[0] * b[1] - a[1] * b[0]);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2scaleandadd(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 3 && nresults <= 1 && ttisvector(arg0) && ttisvector(args) && ttisnumber(args + 1))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        const float s = static_cast<float>(nvalue(args + 1));
+        setvvalue(res, a[0] + b[0] * s, a[1] + b[1] * s, 0.0f, 0.0f);
+        return 1;
+    }
+
+    return -1;
+}
+
+static int luauF_vector2scaleandsub(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 3 && nresults <= 1 && ttisvector(arg0) && ttisvector(args) && ttisnumber(args + 1))
+    {
+        const float* a = vvalue(arg0);
+        const float* b = vvalue(args);
+        const float s = static_cast<float>(nvalue(args + 1));
+        setvvalue(res, a[0] - b[0] * s, a[1] - b[1] * s, 0.0f, 0.0f);
+        return 1;
+    }
+
+    return -1;
+}
+
 static int luauF_integertonumber(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
 {
     if (nparams >= 1 && nresults <= 1 && ttisinteger(arg0))
@@ -2762,19 +2911,30 @@ const luau_FastFunction luauF_table[256] = {
     luauF_bufferreadlong,
     luauF_bufferwritelong,
 
-// When adding builtins, add them above this line; what follows is 64 "dummy" entries with luauF_missing fallback.
-// This is important so that older versions of the runtime that don't support newer builtins automatically fall back via luauF_missing.
-// Given the builtin addition velocity this should always provide a larger compatibility window than bytecode versions suggest.
+// When adding builtins, add them above this line; what follows is padding to fill the 256-slot table.
+// Rive fast functions are pinned at the end of the table (grow downward from 255).
 #define MISSING8 luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing
 
-    MISSING8,
-    MISSING8,
-    MISSING8,
-    MISSING8,
-    MISSING8,
-    MISSING8,
-    MISSING8,
-    MISSING8,
+    // Padding: indices 133-244 (112 entries = 14 MISSING8)
+    MISSING8, MISSING8, MISSING8, MISSING8,
+    MISSING8, MISSING8, MISSING8, MISSING8,
+    MISSING8, MISSING8, MISSING8, MISSING8,
+    MISSING8, MISSING8,
+
+    // Rive Vector 2D fast functions: indices 245-255
+    luauF_vectordistance,
+    luauF_vectordistancesquared,
+    luauF_vectororigin,
+    luauF_vectorlengthsquared,
+    luauF_vector2dot,
+    luauF_vector2magnitude,
+    luauF_vector2normalize,
+    luauF_vector2lerp,
+    luauF_vector2cross,
+    luauF_vector2scaleandadd,
+    luauF_vector2scaleandsub,
 
 #undef MISSING8
 };
+
+static_assert(sizeof(luauF_table) / sizeof(luauF_table[0]) == 256, "luauF_table must have 256 entries");
