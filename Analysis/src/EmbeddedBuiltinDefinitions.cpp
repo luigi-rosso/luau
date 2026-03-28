@@ -270,6 +270,17 @@ declare buffer: {
     writebits: @checked (b: buffer, bitOffset: number, bitCount: number, value: number) -> (),
     readinteger: @checked (b: buffer, offset: number) -> integer,
     writeinteger: @checked (b: buffer, offset: number, value: integer) -> (),
+    --- Read a 16-bit half-precision float from the buffer at the given byte offset.
+    readf16: @checked (b: buffer, offset: number) -> number,
+    --- Write a 16-bit half-precision float to the buffer at the given byte offset.
+    writef16: @checked (b: buffer, offset: number, value: number) -> (),
+    --- Copy `count` elements of `elementSize` bytes between buffers with independent strides.
+    --- Source reads from `srcOffset + i * srcStride`, destination writes to `dstOffset + i * dstStride`.
+    stridedcopy: @checked (dst: buffer, dstOffset: number, dstStride: number, src: buffer, srcOffset: number, srcStride: number, elementSize: number, count: number) -> (),
+    --- Bulk-convert `count` scalar values between numeric formats.
+    --- Supported formats: 'f16', 'f32', 'u8', 'u8norm', 'i8norm', 'u16', 'u16norm', 'i16norm', 'u32'.
+    --- Normalized formats map integer ranges to 0..1 (unsigned) or -1..1 (signed).
+    convert: @checked (dst: buffer, dstOffset: number, dstFormat: string, src: buffer, srcOffset: number, srcFormat: string, count: number) -> (),
 }
 
 )BUILTIN_SRC";
@@ -302,7 +313,18 @@ declare buffer: {
     readstring: @checked (b: buffer, offset: number, count: number) -> string,
     writestring: @checked (b: buffer, offset: number, value: string, count: number?) -> (),
     readbits: @checked (b: buffer, bitOffset: number, bitCount: number) -> number,
-    writebits: @checked (b: buffer, bitOffset: number, bitCount: number, value: number) -> ()
+    writebits: @checked (b: buffer, bitOffset: number, bitCount: number, value: number) -> (),
+    --- Read a 16-bit half-precision float from the buffer at the given byte offset.
+    readf16: @checked (b: buffer, offset: number) -> number,
+    --- Write a 16-bit half-precision float to the buffer at the given byte offset.
+    writef16: @checked (b: buffer, offset: number, value: number) -> (),
+    --- Copy `count` elements of `elementSize` bytes between buffers with independent strides.
+    --- Source reads from `srcOffset + i * srcStride`, destination writes to `dstOffset + i * dstStride`.
+    stridedcopy: @checked (dst: buffer, dstOffset: number, dstStride: number, src: buffer, srcOffset: number, srcStride: number, elementSize: number, count: number) -> (),
+    --- Bulk-convert `count` scalar values between numeric formats.
+    --- Supported formats: 'f16', 'f32', 'u8', 'u8norm', 'i8norm', 'u16', 'u16norm', 'i16norm', 'u32'.
+    --- Normalized formats map integer ranges to 0..1 (unsigned) or -1..1 (signed).
+    convert: @checked (dst: buffer, dstOffset: number, dstFormat: string, src: buffer, srcOffset: number, srcFormat: string, count: number) -> (),
 }
 
 )BUILTIN_SRC";
