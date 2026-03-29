@@ -270,6 +270,10 @@ declare buffer: {
     writebits: @checked (b: buffer, bitOffset: number, bitCount: number, value: number) -> (),
     readinteger: @checked (b: buffer, offset: number) -> integer,
     writeinteger: @checked (b: buffer, offset: number, value: integer) -> (),
+)BUILTIN_SRC"
+
+#ifdef RIVE_LUAU
+R"BUILTIN_SRC(
     --- Read a 16-bit half-precision float from the buffer at the given byte offset.
     readf16: @checked (b: buffer, offset: number) -> number,
     --- Write a 16-bit half-precision float to the buffer at the given byte offset.
@@ -277,10 +281,17 @@ declare buffer: {
     --- Copy `count` elements of `elementSize` bytes between buffers with independent strides.
     --- Source reads from `srcOffset + i * srcStride`, destination writes to `dstOffset + i * dstStride`.
     stridedcopy: @checked (dst: buffer, dstOffset: number, dstStride: number, src: buffer, srcOffset: number, srcStride: number, elementSize: number, count: number) -> (),
-    --- Bulk-convert `count` scalar values between numeric formats.
+    --- Bulk-convert `count` elements between numeric formats.
     --- Supported formats: 'f16', 'f32', 'u8', 'u8norm', 'i8norm', 'u16', 'u16norm', 'i16norm', 'u32'.
     --- Normalized formats map integer ranges to 0..1 (unsigned) or -1..1 (signed).
-    convert: @checked (dst: buffer, dstOffset: number, dstFormat: string, src: buffer, srcOffset: number, srcFormat: string, count: number) -> (),
+    --- `components` is the number of scalars per element (default 1). When strides are omitted
+    --- they default to `components * elementSize` (packed). Use explicit strides to convert
+    --- interleaved vertex attributes in-place (e.g., UVs at offset 24 with a 32-byte vertex stride).
+    convert: @checked (dst: buffer, dstOffset: number, dstFormat: string, src: buffer, srcOffset: number, srcFormat: string, count: number, components: number?, dstStride: number?, srcStride: number?) -> (),
+)BUILTIN_SRC"
+#endif
+
+R"BUILTIN_SRC(
 }
 
 )BUILTIN_SRC";
@@ -314,6 +325,10 @@ declare buffer: {
     writestring: @checked (b: buffer, offset: number, value: string, count: number?) -> (),
     readbits: @checked (b: buffer, bitOffset: number, bitCount: number) -> number,
     writebits: @checked (b: buffer, bitOffset: number, bitCount: number, value: number) -> (),
+)BUILTIN_SRC"
+
+#ifdef RIVE_LUAU
+R"BUILTIN_SRC(
     --- Read a 16-bit half-precision float from the buffer at the given byte offset.
     readf16: @checked (b: buffer, offset: number) -> number,
     --- Write a 16-bit half-precision float to the buffer at the given byte offset.
@@ -321,10 +336,17 @@ declare buffer: {
     --- Copy `count` elements of `elementSize` bytes between buffers with independent strides.
     --- Source reads from `srcOffset + i * srcStride`, destination writes to `dstOffset + i * dstStride`.
     stridedcopy: @checked (dst: buffer, dstOffset: number, dstStride: number, src: buffer, srcOffset: number, srcStride: number, elementSize: number, count: number) -> (),
-    --- Bulk-convert `count` scalar values between numeric formats.
+    --- Bulk-convert `count` elements between numeric formats.
     --- Supported formats: 'f16', 'f32', 'u8', 'u8norm', 'i8norm', 'u16', 'u16norm', 'i16norm', 'u32'.
     --- Normalized formats map integer ranges to 0..1 (unsigned) or -1..1 (signed).
-    convert: @checked (dst: buffer, dstOffset: number, dstFormat: string, src: buffer, srcOffset: number, srcFormat: string, count: number) -> (),
+    --- `components` is the number of scalars per element (default 1). When strides are omitted
+    --- they default to `components * elementSize` (packed). Use explicit strides to convert
+    --- interleaved vertex attributes in-place (e.g., UVs at offset 24 with a 32-byte vertex stride).
+    convert: @checked (dst: buffer, dstOffset: number, dstFormat: string, src: buffer, srcOffset: number, srcFormat: string, count: number, components: number?, dstStride: number?, srcStride: number?) -> (),
+)BUILTIN_SRC"
+#endif
+
+R"BUILTIN_SRC(
 }
 
 )BUILTIN_SRC";
