@@ -739,6 +739,7 @@ enum LuauBuiltinFunction
     // Rive Vector (2D-optimized). Pinned at the end of the 256-slot
     // luauF_table to avoid collision with future upstream additions.
     // New entries are added before the block (grow downward from 255).
+    LBF_RIVE_FROUND = 243, // math.fround: round to nearest float32 (244 reserved)
     LBF_RIVE_VECTOR_DISTANCE = 245,
     LBF_RIVE_VECTOR_DISTANCE_SQUARED,
     LBF_RIVE_VECTOR_ORIGIN,
