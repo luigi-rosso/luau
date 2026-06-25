@@ -131,6 +131,8 @@ static int getBuiltinFunctionId(const Builtin& builtin, const CompileOptions& op
             return LBF_MATH_FMOD;
         if (builtin.method == "frexp")
             return LBF_MATH_FREXP;
+        if (builtin.method == "fround")
+            return LBF_RIVE_FROUND;
         if (builtin.method == "ldexp")
             return LBF_MATH_LDEXP;
         if (builtin.method == "log10")
@@ -759,6 +761,8 @@ BuiltinInfo getBuiltinInfo(int bfid)
     case LBF_INTEGER_RROTATE:
         return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
+    case LBF_RIVE_FROUND:
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
     case LBF_RIVE_VECTOR_DISTANCE:
     case LBF_RIVE_VECTOR_DISTANCE_SQUARED:
         return {2, 1, BuiltinInfo::Flag_NoneSafe};

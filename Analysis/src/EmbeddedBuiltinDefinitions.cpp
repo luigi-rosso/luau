@@ -89,6 +89,7 @@ static constexpr const char* kBuiltinDefinitionMathSrc = R"BUILTIN_SRC(
 
 declare math: {
     frexp: @checked (n: number) -> (number, number),
+    fround: @checked (n: number) -> number,
     ldexp: @checked (s: number, e: number) -> number,
     fmod: @checked (x: number, y: number) -> number,
     modf: @checked (n: number) -> (number, number),
