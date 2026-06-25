@@ -416,6 +416,26 @@ static BuiltinImplResult translateBuiltinMathUnary(IrBuilder& build, IrCmd cmd, 
     return {BuiltinImplType::Full, 1};
 }
 
+// Rive math.fround: narrow to float32 and back. Both conversions already lower
+// to a single instruction on each backend (x64 vcvtsd2ss/vcvtss2sd, A64 fcvt).
+static BuiltinImplResult translateBuiltinMathFround(IrBuilder& build, int nparams, int ra, int arg, int nresults, int pcpos)
+{
+    if (nparams < 1 || nresults > 1)
+        return {BuiltinImplType::None, -1};
+
+    builtinCheckDouble(build, build.vmReg(arg), pcpos);
+
+    IrOp varg = builtinLoadDouble(build, build.vmReg(arg));
+    IrOp result = build.inst(IrCmd::FLOAT_TO_NUM, build.inst(IrCmd::NUM_TO_FLOAT, varg));
+
+    build.inst(IrCmd::STORE_DOUBLE, build.vmReg(ra), result);
+
+    if (ra != arg)
+        build.inst(IrCmd::STORE_TAG, build.vmReg(ra), build.constTag(LUA_TNUMBER));
+
+    return {BuiltinImplType::Full, 1};
+}
+
 static BuiltinImplResult translateBuiltinMathIsNan(IrBuilder& build, int nparams, int ra, int arg, IrOp args, int nresults, int pcpos)
 {
     if (nparams < 1 || nresults > 1)
@@ -2092,6 +2112,8 @@ BuiltinImplResult translateBuiltin(
         return translateBuiltinMathUnary(build, IrCmd::ABS_NUM, nparams, ra, arg, nresults, pcpos);
     case LBF_MATH_ROUND:
         return translateBuiltinMathUnary(build, IrCmd::ROUND_NUM, nparams, ra, arg, nresults, pcpos);
+    case LBF_RIVE_FROUND:
+        return translateBuiltinMathFround(build, nparams, ra, arg, nresults, pcpos);
     case LBF_MATH_EXP:
     case LBF_MATH_ASIN:
     case LBF_MATH_SIN:
