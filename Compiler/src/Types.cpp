@@ -844,6 +844,7 @@ struct TypeMapVisitor : AstVisitor
             case LBF_VECTOR_MAGNITUDE:
             case LBF_VECTOR_DOT:
             case LBF_MATH_LERP:
+            case LBF_RIVE_FROUND:
             case LBF_RIVE_VECTOR_DISTANCE:
             case LBF_RIVE_VECTOR_DISTANCE_SQUARED:
             case LBF_RIVE_VECTOR_LENGTH_SQUARED:

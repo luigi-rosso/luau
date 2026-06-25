@@ -201,6 +201,13 @@ static int math_ldexp(lua_State* L)
     return 1;
 }
 
+// Rive: round to nearest float32. Fallback for the LBF_RIVE_FROUND fastcall.
+static int math_fround(lua_State* L)
+{
+    lua_pushnumber(L, double(float(luaL_checknumber(L, 1))));
+    return 1;
+}
+
 static int math_min(lua_State* L)
 {
     int n = lua_gettop(L); // number of arguments
@@ -484,6 +491,7 @@ static const luaL_Reg mathlib[] = {
     {"floor", math_floor},
     {"fmod", math_fmod},
     {"frexp", math_frexp},
+    {"fround", math_fround},
     {"ldexp", math_ldexp},
     {"log10", math_log10},
     {"log", math_log},
