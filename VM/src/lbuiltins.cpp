@@ -966,6 +966,20 @@ static int luauF_round(lua_State* L, StkId res, TValue* arg0, int nresults, StkI
 }
 LUAU_FASTMATH_END
 
+// Rive: round to nearest float32. Kept outside LUAU_FASTMATH so the narrowing
+// to float is not optimized away.
+static int luauF_fround(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+{
+    if (nparams >= 1 && nresults <= 1 && ttisnumber(arg0))
+    {
+        double v = nvalue(arg0);
+        setnvalue(res, double(float(v)));
+        return 1;
+    }
+
+    return -1;
+}
+
 static int luauF_rawequal(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
 {
     if (nparams >= 2 && nresults <= 1)
@@ -2891,11 +2905,16 @@ const luau_FastFunction luauF_table[256] = {
 // Rive fast functions are pinned at the end of the table (grow downward from 255).
 #define MISSING8 luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing
 
-    // Padding: indices 133-244 (112 entries = 14 MISSING8)
+    // Padding: indices 133-242 (110 entries = 13 MISSING8 + 6)
     MISSING8, MISSING8, MISSING8, MISSING8,
     MISSING8, MISSING8, MISSING8, MISSING8,
     MISSING8, MISSING8, MISSING8, MISSING8,
-    MISSING8, MISSING8,
+    MISSING8,
+    luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing, luauF_missing,
+
+    // Rive math.fround: index 243 (244 reserved as missing)
+    luauF_fround,
+    luauF_missing,
 
     // Rive Vector 2D fast functions: indices 245-255
     luauF_vectordistance,
