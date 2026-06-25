@@ -526,4 +526,17 @@ assert(math.isnan("123.45") == false)
 assert(math.isinf("123.45") == false)
 assert(math.isfinite("123.45") == true)
 
+-- math.fround: round to nearest float32 (Rive builtin)
+assert(math.fround(0) == 0)
+assert(math.fround(1) == 1)
+assert(math.fround(-1) == -1)
+assert(math.fround(0.5) == 0.5)
+assert(math.fround(2^24 + 1) == 2^24) -- not representable in float32, rounds down
+assert(math.fround("1.5") == 1.5) -- string coercion exercises the fallback path
+assert(math.fround(math.huge) == math.huge)
+assert(math.fround(1.1) ~= 1.1) -- 1.1 is not exactly representable as float32
+assert(math.fround(math.fround(1.1)) == math.fround(1.1)) -- idempotent
+local froundNan = math.fround(0 / 0)
+assert(froundNan ~= froundNan)
+
 return('OK')
