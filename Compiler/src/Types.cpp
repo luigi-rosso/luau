@@ -848,8 +848,8 @@ struct TypeMapVisitor : AstVisitor
             case LBF_RIVE_VECTOR_DISTANCE:
             case LBF_RIVE_VECTOR_DISTANCE_SQUARED:
             case LBF_RIVE_VECTOR_LENGTH_SQUARED:
-            case LBF_RIVE_VECTOR2_DOT:
-            case LBF_RIVE_VECTOR2_MAGNITUDE:
+            case LBF_RIVE_VECTOR_DOT:
+            case LBF_RIVE_VECTOR_MAGNITUDE:
             case LBF_RIVE_VECTOR2_CROSS:
                 recordResolvedType(node, &builtinTypes.numberType);
                 break;
@@ -881,10 +881,10 @@ struct TypeMapVisitor : AstVisitor
             case LBF_VECTOR_MAX:
             case LBF_VECTOR_LERP:
             case LBF_RIVE_VECTOR_ORIGIN:
-            case LBF_RIVE_VECTOR2_NORMALIZE:
-            case LBF_RIVE_VECTOR2_LERP:
-            case LBF_RIVE_VECTOR2_SCALE_AND_ADD:
-            case LBF_RIVE_VECTOR2_SCALE_AND_SUB:
+            case LBF_RIVE_VECTOR_NORMALIZE:
+            case LBF_RIVE_VECTOR_LERP:
+            case LBF_RIVE_VECTOR_SCALE_AND_ADD:
+            case LBF_RIVE_VECTOR_SCALE_AND_SUB:
                 recordResolvedType(node, &builtinTypes.vectorType);
                 break;
 
