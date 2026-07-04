@@ -378,25 +378,25 @@ static int getBuiltinFunctionId(const Builtin& builtin, const CompileOptions& op
         if (builtin.method == "origin")
             return LBF_RIVE_VECTOR_ORIGIN;
         if (builtin.method == "dot")
-            return LBF_RIVE_VECTOR2_DOT;
+            return LBF_RIVE_VECTOR_DOT;
         if (builtin.method == "lerp")
-            return LBF_RIVE_VECTOR2_LERP;
+            return LBF_RIVE_VECTOR_LERP;
         if (builtin.method == "distance")
             return LBF_RIVE_VECTOR_DISTANCE;
         if (builtin.method == "distanceSquared")
             return LBF_RIVE_VECTOR_DISTANCE_SQUARED;
         if (builtin.method == "length")
-            return LBF_RIVE_VECTOR2_MAGNITUDE;
+            return LBF_RIVE_VECTOR_MAGNITUDE;
         if (builtin.method == "lengthSquared")
             return LBF_RIVE_VECTOR_LENGTH_SQUARED;
         if (builtin.method == "normalized")
-            return LBF_RIVE_VECTOR2_NORMALIZE;
+            return LBF_RIVE_VECTOR_NORMALIZE;
         if (builtin.method == "cross")
             return LBF_RIVE_VECTOR2_CROSS;
         if (builtin.method == "scaleAndAdd")
-            return LBF_RIVE_VECTOR2_SCALE_AND_ADD;
+            return LBF_RIVE_VECTOR_SCALE_AND_ADD;
         if (builtin.method == "scaleAndSub")
-            return LBF_RIVE_VECTOR2_SCALE_AND_SUB;
+            return LBF_RIVE_VECTOR_SCALE_AND_SUB;
     }
 
     if (options.vectorCtor)
@@ -769,18 +769,18 @@ BuiltinInfo getBuiltinInfo(int bfid)
     case LBF_RIVE_VECTOR_ORIGIN:
         return {0, 1, BuiltinInfo::Flag_NoneSafe};
     case LBF_RIVE_VECTOR_LENGTH_SQUARED:
-    case LBF_RIVE_VECTOR2_MAGNITUDE:
+    case LBF_RIVE_VECTOR_MAGNITUDE:
         return {1, 1, BuiltinInfo::Flag_NoneSafe};
-    case LBF_RIVE_VECTOR2_DOT:
+    case LBF_RIVE_VECTOR_DOT:
         return {2, 1, BuiltinInfo::Flag_NoneSafe};
-    case LBF_RIVE_VECTOR2_NORMALIZE:
+    case LBF_RIVE_VECTOR_NORMALIZE:
         return {1, 1, BuiltinInfo::Flag_NoneSafe};
-    case LBF_RIVE_VECTOR2_LERP:
+    case LBF_RIVE_VECTOR_LERP:
         return {3, 1, BuiltinInfo::Flag_NoneSafe};
     case LBF_RIVE_VECTOR2_CROSS:
         return {2, 1, BuiltinInfo::Flag_NoneSafe};
-    case LBF_RIVE_VECTOR2_SCALE_AND_ADD:
-    case LBF_RIVE_VECTOR2_SCALE_AND_SUB:
+    case LBF_RIVE_VECTOR_SCALE_AND_ADD:
+    case LBF_RIVE_VECTOR_SCALE_AND_SUB:
         return {3, 1, BuiltinInfo::Flag_NoneSafe};
     }
 
@@ -791,5 +791,5 @@ BuiltinInfo getBuiltinInfo(int bfid)
 } // namespace Luau
 
 // Rive: verify the LBF enum layout at compile time.
-static_assert(LBF_RIVE_VECTOR2_SCALE_AND_SUB == 255, "Rive LBF block must end at index 255");
+static_assert(LBF_RIVE_VECTOR_SCALE_AND_SUB == 255, "Rive LBF block must end at index 255");
 static_assert(LBF_RIVE_VECTOR_DISTANCE > LBF_MATH_ISFINITE, "Rive LBF entries must not overlap upstream");
