@@ -1806,17 +1806,19 @@ static int luauF_isfinite(lua_State* L, StkId res, TValue* arg0, int nresults, S
     return -1;
 }
 
-// Rive 2D-optimized fast functions (skip z component since Rive vectors are 2D with z=0)
+// Rive Vector fast functions, 3-component (z=0 inputs match the old 2D
+// results); cross is intentionally the 2D perp-dot.
 
 static int luauF_vectordistance(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
 {
     if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
     {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
-        float dx = a[0] - b[0];
-        float dy = a[1] - b[1];
-        setnvalue(res, sqrtf(dx * dx + dy * dy));
+        const LUA_VECTOR_TYPE* a = vvalue(arg0);
+        const LUA_VECTOR_TYPE* b = vvalue(args);
+        LUA_VECTOR_TYPE dx = a[0] - b[0];
+        LUA_VECTOR_TYPE dy = a[1] - b[1];
+        LUA_VECTOR_TYPE dz = a[2] - b[2];
+        setnvalue(res, luai_sqrt(dx * dx + dy * dy + dz * dz));
         return 1;
     }
 
@@ -1827,11 +1829,12 @@ static int luauF_vectordistancesquared(lua_State* L, StkId res, TValue* arg0, in
 {
     if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
     {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
-        float dx = a[0] - b[0];
-        float dy = a[1] - b[1];
-        setnvalue(res, dx * dx + dy * dy);
+        const LUA_VECTOR_TYPE* a = vvalue(arg0);
+        const LUA_VECTOR_TYPE* b = vvalue(args);
+        LUA_VECTOR_TYPE dx = a[0] - b[0];
+        LUA_VECTOR_TYPE dy = a[1] - b[1];
+        LUA_VECTOR_TYPE dz = a[2] - b[2];
+        setnvalue(res, dx * dx + dy * dy + dz * dz);
         return 1;
     }
 
@@ -1842,7 +1845,7 @@ static int luauF_vectororigin(lua_State* L, StkId res, TValue* arg0, int nresult
 {
     if (nresults <= 1)
     {
-        setvvalue(res, 0.0f, 0.0f, 0.0f, 0.0f);
+        setvvalue(L, res, 0.0, 0.0, 0.0, 0.0);
         return 1;
     }
 
@@ -1853,61 +1856,24 @@ static int luauF_vectorlengthsquared(lua_State* L, StkId res, TValue* arg0, int 
 {
     if (nparams >= 1 && nresults <= 1 && ttisvector(arg0))
     {
-        const float* v = vvalue(arg0);
-        setnvalue(res, v[0] * v[0] + v[1] * v[1]);
+        const LUA_VECTOR_TYPE* v = vvalue(arg0);
+        setnvalue(res, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
         return 1;
     }
 
     return -1;
 }
 
-static int luauF_vector2dot(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
-{
-    if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
-    {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
-        setnvalue(res, a[0] * b[0] + a[1] * b[1]);
-        return 1;
-    }
-
-    return -1;
-}
-
-static int luauF_vector2magnitude(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+// Dot, magnitude and lerp reuse the upstream fast functions. Normalize
+// differs: zero-length stays the zero vector per Vector.normalized's contract.
+static int luauF_rivevectornormalize(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
 {
     if (nparams >= 1 && nresults <= 1 && ttisvector(arg0))
     {
-        const float* v = vvalue(arg0);
-        setnvalue(res, sqrtf(v[0] * v[0] + v[1] * v[1]));
-        return 1;
-    }
-
-    return -1;
-}
-
-static int luauF_vector2normalize(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
-{
-    if (nparams >= 1 && nresults <= 1 && ttisvector(arg0))
-    {
-        const float* v = vvalue(arg0);
-        float lenSq = v[0] * v[0] + v[1] * v[1];
-        float invLen = 1.0f / sqrtf(lenSq);
-        setvvalue(res, v[0] * invLen, v[1] * invLen, 0.0f, 0.0f);
-        return 1;
-    }
-
-    return -1;
-}
-
-static int luauF_vector2lerp(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
-{
-    if (nparams >= 3 && nresults <= 1 && ttisvector(arg0) && ttisvector(args) && ttisnumber(args + 1))
-    {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
-        const float t = static_cast<float>(nvalue(args + 1));
-        setvvalue(res, luai_lerpf(a[0], b[0], t), luai_lerpf(a[1], b[1], t), 0.0f, 0.0f);
+        const LUA_VECTOR_TYPE* v = vvalue(arg0);
+        LUA_VECTOR_TYPE lenSq = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        LUA_VECTOR_TYPE invLen = lenSq > LUA_VECTOR_TYPE(0.0) ? LUA_VECTOR_TYPE(1.0) / luai_sqrt(lenSq) : LUA_VECTOR_TYPE(1.0);
+        setvvalue(L, res, v[0] * invLen, v[1] * invLen, v[2] * invLen, 0.0);
         return 1;
     }
 
@@ -1918,8 +1884,8 @@ static int luauF_vector2cross(lua_State* L, StkId res, TValue* arg0, int nresult
 {
     if (nparams >= 2 && nresults <= 1 && ttisvector(arg0) && ttisvector(args))
     {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
+        const LUA_VECTOR_TYPE* a = vvalue(arg0);
+        const LUA_VECTOR_TYPE* b = vvalue(args);
         setnvalue(res, a[0] * b[1] - a[1] * b[0]);
         return 1;
     }
@@ -1927,28 +1893,28 @@ static int luauF_vector2cross(lua_State* L, StkId res, TValue* arg0, int nresult
     return -1;
 }
 
-static int luauF_vector2scaleandadd(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+static int luauF_vectorscaleandadd(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
 {
     if (nparams >= 3 && nresults <= 1 && ttisvector(arg0) && ttisvector(args) && ttisnumber(args + 1))
     {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
-        const float s = static_cast<float>(nvalue(args + 1));
-        setvvalue(res, a[0] + b[0] * s, a[1] + b[1] * s, 0.0f, 0.0f);
+        const LUA_VECTOR_TYPE* a = vvalue(arg0);
+        const LUA_VECTOR_TYPE* b = vvalue(args);
+        const LUA_VECTOR_TYPE s = LUA_VECTOR_TYPE(nvalue(args + 1));
+        setvvalue(L, res, a[0] + b[0] * s, a[1] + b[1] * s, a[2] + b[2] * s, 0.0);
         return 1;
     }
 
     return -1;
 }
 
-static int luauF_vector2scaleandsub(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
+static int luauF_vectorscaleandsub(lua_State* L, StkId res, TValue* arg0, int nresults, StkId args, int nparams)
 {
     if (nparams >= 3 && nresults <= 1 && ttisvector(arg0) && ttisvector(args) && ttisnumber(args + 1))
     {
-        const float* a = vvalue(arg0);
-        const float* b = vvalue(args);
-        const float s = static_cast<float>(nvalue(args + 1));
-        setvvalue(res, a[0] - b[0] * s, a[1] - b[1] * s, 0.0f, 0.0f);
+        const LUA_VECTOR_TYPE* a = vvalue(arg0);
+        const LUA_VECTOR_TYPE* b = vvalue(args);
+        const LUA_VECTOR_TYPE s = LUA_VECTOR_TYPE(nvalue(args + 1));
+        setvvalue(L, res, a[0] - b[0] * s, a[1] - b[1] * s, a[2] - b[2] * s, 0.0);
         return 1;
     }
 
@@ -2940,18 +2906,18 @@ const luau_FastFunction luauF_table[256] = {
     luauF_fround,
     luauF_missing,
 
-    // Rive Vector 2D fast functions: indices 245-255
+    // Rive Vector fast functions: indices 245-255
     luauF_vectordistance,
     luauF_vectordistancesquared,
     luauF_vectororigin,
     luauF_vectorlengthsquared,
-    luauF_vector2dot,
-    luauF_vector2magnitude,
-    luauF_vector2normalize,
-    luauF_vector2lerp,
+    luauF_vectordot,
+    luauF_vectormagnitude,
+    luauF_rivevectornormalize,
+    luauF_vectorlerp,
     luauF_vector2cross,
-    luauF_vector2scaleandadd,
-    luauF_vector2scaleandsub,
+    luauF_vectorscaleandadd,
+    luauF_vectorscaleandsub,
 
 #undef MISSING8
 };

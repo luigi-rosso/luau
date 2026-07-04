@@ -736,21 +736,21 @@ enum LuauBuiltinFunction
     LBF_BUFFER_READINTEGER,
     LBF_BUFFER_WRITEINTEGER,
 
-    // Rive Vector (2D-optimized). Pinned at the end of the 256-slot
-    // luauF_table to avoid collision with future upstream additions.
-    // New entries are added before the block (grow downward from 255).
+    // Rive Vector fast functions (3-component; cross is the 2D perp-dot).
+    // Pinned at the end of the 256-slot luauF_table to avoid collision with
+    // upstream additions; new entries grow downward from the block.
     LBF_RIVE_FROUND = 243, // math.fround: round to nearest float32 (244 reserved)
     LBF_RIVE_VECTOR_DISTANCE = 245,
     LBF_RIVE_VECTOR_DISTANCE_SQUARED,
     LBF_RIVE_VECTOR_ORIGIN,
     LBF_RIVE_VECTOR_LENGTH_SQUARED,
-    LBF_RIVE_VECTOR2_DOT,
-    LBF_RIVE_VECTOR2_MAGNITUDE,
-    LBF_RIVE_VECTOR2_NORMALIZE,
-    LBF_RIVE_VECTOR2_LERP,
+    LBF_RIVE_VECTOR_DOT,
+    LBF_RIVE_VECTOR_MAGNITUDE,
+    LBF_RIVE_VECTOR_NORMALIZE,
+    LBF_RIVE_VECTOR_LERP,
     LBF_RIVE_VECTOR2_CROSS,
-    LBF_RIVE_VECTOR2_SCALE_AND_ADD,
-    LBF_RIVE_VECTOR2_SCALE_AND_SUB,
+    LBF_RIVE_VECTOR_SCALE_AND_ADD,
+    LBF_RIVE_VECTOR_SCALE_AND_SUB,
 };
 
 // Capture type, used in LOP_CAPTURE
