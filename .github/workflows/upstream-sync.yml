@@ -7,7 +7,7 @@ on:
     inputs:
       base_branch:
         description: 'Fork branch to rebase'
-        default: 'rive_0_732'
+        default: 'rive_0_733'
         required: true
       upstream_ref:
         description: 'Upstream ref to rebase onto (branch or tag)'
@@ -22,13 +22,13 @@ jobs:
   rebase:
     runs-on: ubuntu-latest
     env:
-      BASE_BRANCH: ${{ github.event.inputs.base_branch || 'rive_0_732' }}
+      BASE_BRANCH: ${{ github.event.inputs.base_branch || 'rive_0_733' }}
       UPSTREAM_REF: ${{ github.event.inputs.upstream_ref || 'master' }}
     steps:
       - name: Checkout fork
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.base_branch || 'rive_0_732' }}
+          ref: ${{ github.event.inputs.base_branch || 'rive_0_733' }}
           fetch-depth: 0
 
       - name: Configure git identity
